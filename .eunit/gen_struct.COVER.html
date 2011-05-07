@@ -1,0 +1,72 @@
+<html>
+<head><title>.eunit/gen_struct.COVER.html</title></head><body bgcolor=white text=black>
+<pre>
+File generated from /home/shomodj/workspace/osw/core/lib/gen_struct/.eunit/gen_struct.erl by COVER 2011-04-30 at 21:21:08
+
+****************************************************************************
+
+        |  %%----------------------------------------------------------------------------------------------------
+        |  -module(gen_struct).
+        |  %%----------------------------------------------------------------------------------------------------
+        |  -export([
+        |      new/1,
+        |      new/2,
+        |      fset/3,
+        |      fset/4,
+        |      fget/3,
+        |      fget/4
+        |    ]).
+        |  %%----------------------------------------------------------------------------------------------------
+        |  -define(FIELDS(M),  M:'=fields'() ).
+        |  -define(INDEX(M,F), M:'=field'(F) ).
+        |  -define(RECORD(M),  M:'=record'() ).
+        |  %%----------------------------------------------------------------------------------------------------
+        |  
+        |  new(Module) when is_atom(Module) -&gt;
+    16..|    ?RECORD(Module).
+        |  
+        |  %%----------------------------------------------------------------------------------------------------
+        |  
+        |  new(Module,Proplist) when is_atom(Module), is_list(Proplist) -&gt;
+    12..|    Struct =?RECORD(Module),
+    12..|    Keys = proplists:get_keys(Proplist),
+    12..|    1,
+    12..|    lists:foldl(fun(K,S) -&gt; S:fset(K, proplists:get_value(K,Proplist)) end, Struct, Keys).
+        |  
+        |  %%----------------------------------------------------------------------------------------------------
+        |  
+        |  fset(Module,Struct,Field,Value) when is_atom(Module), is_tuple(Struct), is_atom(Field) -&gt;
+    86..|    Index = ?INDEX(Module,Field),
+    86..|    erlang:setelement(Index,Struct,Value).
+        |  
+        |  fset(Module,Struct,Proplist) when is_atom(Module), is_tuple(Struct), is_list(Proplist) -&gt;
+     2..|    Keys = proplists:get_keys(Proplist),
+     2..|    lists:foldl(fun(K,S) -&gt; S:fset(K, proplists:get_value(K,Proplist)) end, Struct, Keys).
+        |  
+        |  %%----------------------------------------------------------------------------------------------------
+        |  
+        |  fget(Module,Struct,Field) when is_atom(Module), is_tuple(Struct), is_atom(Field) -&gt;
+    23..|    Index = ?INDEX(Module,Field),
+    23..|    erlang:element(Index,Struct);
+        |  
+        |  fget(Module,Struct,Fields) when is_atom(Module), is_tuple(Struct), is_list(Fields) -&gt;
+     6..|    [Struct:fget(F) || F &lt;- Fields].
+        |  
+        |  %%----------------------------------------------------------------------------------------------------
+        |  
+        |  fget(Module,Struct,Field,DefVal) when is_atom(Module), is_tuple(Struct), is_atom(Field) -&gt;
+     2..|    Index = ?INDEX(Module,Field),
+     2..|    case erlang:element(Index,Struct) of
+     1..|      undefined -&gt; DefVal;
+     1..|      Ret       -&gt; Ret
+        |    end.
+        |  
+        |  %%----------------------------------------------------------------------------------------------------
+        |  %% TODO utils module: to_dict, to_list, to_proplist
+        |  %% TODO dumper function
+        |  %% TODO basic mnesia
+        |  %% TODO basic built in erlang validation
+        |  %%----------------------------------------------------------------------------------------------------
+</pre>
+</body>
+</html>
