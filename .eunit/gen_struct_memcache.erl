@@ -1,1 +1,0 @@
--module(gen_struct_memcache).

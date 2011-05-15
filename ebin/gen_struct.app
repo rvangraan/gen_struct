@@ -5,7 +5,5 @@
               {applications,[kernel,stdlib]},
               {mod,{gen_struct_app,[]}},
               {env,[]},
-              {modules,[gen_struct,gen_struct_app,gen_struct_ets,
-                        gen_struct_memcache,gen_struct_mnesia,gen_struct_riak,
-                        gen_struct_sql,gen_struct_sup,gen_struct_transform,
-                        gen_struct_utils,gen_struct_validations]}]}.
+              {modules,[gen_struct,gen_struct_app,gen_struct_sup,
+                        gen_struct_transform]}]}.
