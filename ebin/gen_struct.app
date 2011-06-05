@@ -1,9 +1,0 @@
-{application,gen_struct,
-             [{description,[]},
-              {vsn,"1"},
-              {registered,[]},
-              {applications,[kernel,stdlib]},
-              {mod,{gen_struct_app,[]}},
-              {env,[]},
-              {modules,[gen_struct,gen_struct_app,gen_struct_sup,
-                        gen_struct_transform]}]}.
