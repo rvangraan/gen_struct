@@ -30,7 +30,7 @@ new_test_() ->
   M1 = test_struct1,
   M2 = test_struct2,
   S1 = M1:new(),
-  S2 = M1:new([{field1,2},{field2,2},{field3,3},{field4,4},{field5,5},
+  S2 = M1:new([{field1,1},{field2,2},{field3,3},{field4,4},{field5,5},
                {field6,6},{field7,7},{field8,8}]),
   S3 = M1:new([{field6,6},{field7,7},{field8,8}]),
 
