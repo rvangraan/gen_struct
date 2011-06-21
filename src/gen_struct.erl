@@ -23,7 +23,6 @@ new(Module) when is_atom(Module) ->
 new(Module,Proplist) when is_atom(Module), is_list(Proplist) ->
   Struct =?RECORD(Module),
   Keys = proplists:get_keys(Proplist),
-  1,
   lists:foldl(fun(K,S) -> S:fset(K, proplists:get_value(K,Proplist)) end, Struct, Keys).
 
 %%----------------------------------------------------------------------------------------------------
