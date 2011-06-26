@@ -1,7 +1,7 @@
 {application, gen_struct,
  [
-  {description, ""},
-  {vsn, "1"},
+  {description, "Generic structure"},
+  {vsn, "1.0.0"},
   {registered, []},
   {applications, [
                   kernel,

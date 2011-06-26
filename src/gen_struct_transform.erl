@@ -1,12 +1,12 @@
-%%----------------------------------------------------------------------------------------------------
+%%--------------------------------------------------------------------------------------------------
 -module(gen_struct_transform).
-%%----------------------------------------------------------------------------------------------------
+%%--------------------------------------------------------------------------------------------------
 -export([parse_transform/2]).
-%%----------------------------------------------------------------------------------------------------
+%%--------------------------------------------------------------------------------------------------
 %% TODO: clean up this file a bit
 %% TODO: create state
 %-record(state,{eof, ast, opt, record_name, module_name, record_fields}).
-%%----------------------------------------------------------------------------------------------------
+%%--------------------------------------------------------------------------------------------------
 
 parse_transform(AST, _Options) ->
   % io:format("AST: \n~p\n",[AST]),
@@ -61,32 +61,42 @@ has_function(FunctionName, Arity, [_|Rest]) ->
 
 %%--------------------------------------------------------------------------------------------------
 
-get_last_line_number([{eof,LineNum}|_]) -> LineNum;
-get_last_line_number([_|Rest])          -> get_last_line_number(Rest).
+get_last_line_number([{eof,LineNum}|_]) -> 
+  LineNum;
+get_last_line_number([_|Rest]) -> 
+  get_last_line_number(Rest).
 
-%%----------------------------------------------------------------------------------------------------
+%%--------------------------------------------------------------------------------------------------
 
-get_module_name([{attribute,_,module,ModuleName}|_]) -> ModuleName;
-get_module_name([_|Rest])                            -> get_module_name(Rest).
+get_module_name([{attribute,_,module,ModuleName}|_]) -> 
+  ModuleName;
+get_module_name([_|Rest]) -> 
+  get_module_name(Rest).
 
-%%----------------------------------------------------------------------------------------------------
+%%--------------------------------------------------------------------------------------------------
 
-get_record(RecordName,[])                                             -> throw({record_does_not_exist,[{record,RecordName}]});
-get_record(RecordName,[{attribute,_,record,{RecordName,_}=Record}|_]) -> Record;
-get_record(RecordName,[_|Rest])                                       -> get_record(RecordName,Rest).
+get_record(RecordName,[]) -> 
+  throw({record_does_not_exist,[{record,RecordName}]});
+get_record(RecordName,[{attribute,_,record,{RecordName,_}=Record}|_]) -> 
+  Record;
+get_record(RecordName,[_|Rest]) -> 
+  get_record(RecordName,Rest).
 
-%%----------------------------------------------------------------------------------------------------
+%%--------------------------------------------------------------------------------------------------
 
 get_record_fields({_RecordName,RecordFields}) ->
   get_record_fields_loop(RecordFields,[]).
 
-get_record_fields_loop([],Acc)                                                       -> lists:reverse(Acc);
-get_record_fields_loop([{record_field,_,{atom,_,FieldName}}|Rest],Acc)               -> get_record_fields_loop(Rest,[FieldName|Acc]);
-get_record_fields_loop([{record_field,_,{atom,_,FieldName},_DefaultValue}|Rest],Acc) -> get_record_fields_loop(Rest,[FieldName|Acc]);
-get_record_fields_loop([Field|_Rest],_Acc)                                           -> throw({invalid_record_field,[{field,Field}]}).
+get_record_fields_loop([],Acc) -> 
+  lists:reverse(Acc);
+get_record_fields_loop([{record_field,_,{atom,_,FieldName}}|Rest],Acc) -> 
+  get_record_fields_loop(Rest,[FieldName|Acc]);
+get_record_fields_loop([{record_field,_,{atom,_,FieldName},_DefaultValue}|Rest],Acc) -> 
+  get_record_fields_loop(Rest,[FieldName|Acc]);
+get_record_fields_loop([Field|_Rest],_Acc) -> 
+  throw({invalid_record_field,[{field,Field}]}).
 
-
-%%----------------------------------------------------------------------------------------------------
+%%--------------------------------------------------------------------------------------------------
 
 gen_fields_idx_fun_ast(Fields,LastLineNumber) ->
   gen_fields_idx_fun_ast_loop(Fields,LastLineNumber,2,[]). %% 2 because first element is module_name
@@ -100,20 +110,20 @@ gen_fields_idx_fun_ast_loop([Field|Fields],LastLineNumber,Index,Acc) ->
   Acc1 = Acc ++ "'=field'(" ++ atom_to_list(Field) ++") -> "++ integer_to_list(Index) ++"; \n",
   gen_fields_idx_fun_ast_loop(Fields,LastLineNumber,Index+1,Acc1).
 
-%%----------------------------------------------------------------------------------------------------
+%%--------------------------------------------------------------------------------------------------
 
 gen_fields_lst_fun_ast(Fields,LastLineNumber) ->
   Lst = "'=fields'() -> [ " ++ (lists:flatten([ ", " ++ atom_to_list(F) || F <- Fields]) -- "," ) ++ " ].",
   from_str_to_ast(Lst,LastLineNumber).
 
-%%----------------------------------------------------------------------------------------------------
+%%--------------------------------------------------------------------------------------------------
 
 insert_record_ast_fun(AST,RecordName,LastLineNumber) ->
   Str = "'=record'() -> #"++ atom_to_list(RecordName) ++"{} .",
   {InsertAST,NewLastLineNumber} = from_str_to_ast(Str,LastLineNumber),
   insert_before_eof(AST,InsertAST,NewLastLineNumber).
 
-%%----------------------------------------------------------------------------------------------------
+%%--------------------------------------------------------------------------------------------------
 
 insert_init_ast_fun(AST, LastLineNumber) ->
   case has_function(init, 1, AST) of
@@ -156,7 +166,7 @@ from_str_to_ast(Str, LastLineNumber) ->
   {ok, AST} = erl_parse:parse_form(Tokens),                             
   {AST, NewLastLineNumber}.
 
-%%----------------------------------------------------------------------------------------------------
+%%--------------------------------------------------------------------------------------------------
 
 insert_before_eof(AST, InsertAST, NewLastLineNumber) ->
   insert_before_eof_loop(AST, InsertAST, NewLastLineNumber,[]).
@@ -168,4 +178,4 @@ insert_before_eof_loop([{eof,_LastLineNumber}|_], InsertAST, NewLastLineNumber, 
 insert_before_eof_loop([ASTElemnt|Rest], InsertAST, NumberOfLines, Acc) -> 
   insert_before_eof_loop(Rest, InsertAST, NumberOfLines, [ASTElemnt|Acc]).
 
-%%----------------------------------------------------------------------------------------------------
+%%--------------------------------------------------------------------------------------------------
