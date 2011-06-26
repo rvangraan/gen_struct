@@ -14,6 +14,7 @@
 %%--------------------------------------------------------------------------------------------------
 %% TODO test record not found
 %% TODO test not proplist
+%%--------------------------------------------------------------------------------------------------
 
 %%-record(test_struct,{
 %%    field1 = ?INT,
@@ -25,6 +26,8 @@
 %%    field7 = ?STR,
 %%    field8 = ?REC
 %%  }).
+
+%%--------------------------------------------------------------------------------------------------
 
 new_test_() ->
   M1 = test_struct1,
@@ -139,5 +142,33 @@ start_stop_test() ->
   ok = application:stop(gen_struct),
   ok = application:start(gen_struct),
   ok.
+
+%%--------------------------------------------------------------------------------------------------
+
+new_from_tuple_test_() ->
+  M1 = test_struct1,
+  Tuple1 = {1,2,3,4,5,6,7,8},
+  Tuple2 = {1,2,3,4,5,6,7,8,9},
+
+  [
+    ?_assertMatch(X when is_tuple(X), M1:new_from_tuple(Tuple1) ),
+    ?_assertException(throw, 
+                      {invalid_number_of_arguments,[{expected, 8}, {actual, 9}]},
+                      M1:new_from_tuple(Tuple2))
+  ].
+
+%%--------------------------------------------------------------------------------------------------
+
+new_from_list_test_() ->
+  M1 = test_struct1,
+  List1 = [1,2,3,4,5,6,7,8],
+  List2 = [1,2,3,4,5,6,7,8,9],
+
+  [
+    ?_assertMatch(X when is_tuple(X), M1:new_from_list(List1) ),
+    ?_assertException(throw, 
+                      {invalid_number_of_arguments,[{expected, 8}, {actual, 9}]},
+                      M1:new_from_list(List2))
+  ].
 
 %%--------------------------------------------------------------------------------------------------

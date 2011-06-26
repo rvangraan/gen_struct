@@ -4,6 +4,8 @@
 -export([
     new/1,
     new/2,
+    new_from_list/2,
+    new_from_tuple/2,
     fset/3,
     fset/4,
     fget/3,
@@ -21,9 +23,32 @@ new(Module) when is_atom(Module) ->
 %%----------------------------------------------------------------------------------------------------
 
 new(Module,Proplist) when is_atom(Module), is_list(Proplist) ->
-  Struct =?RECORD(Module),
+  Struct = ?RECORD(Module),
   Keys = proplists:get_keys(Proplist),
   lists:foldl(fun(K,S) -> S:fset(K, proplists:get_value(K,Proplist)) end, Struct, Keys).
+
+%%----------------------------------------------------------------------------------------------------
+
+%% TODO
+new_from_list(Module, List) when is_atom(Module), is_list(List) ->
+  Fields = ?FIELDS(Module),
+  StructLen = length(Fields),
+  ListLen = length(List),
+  case StructLen =:= ListLen of
+    true -> list_to_tuple([Module] ++ List);
+    false -> throw({invalid_number_of_arguments,[{expected, StructLen}, {actual, ListLen}]})
+  end.
+
+%%----------------------------------------------------------------------------------------------------
+
+new_from_tuple(Module, Tuple) when is_atom(Module), is_tuple(Tuple) ->
+  Fields = ?FIELDS(Module),
+  StructLen = length(Fields),
+  TupleLen = size(Tuple),
+  case StructLen =:= TupleLen of
+    true -> list_to_tuple([Module] ++ tuple_to_list(Tuple));
+    false -> throw({invalid_number_of_arguments,[{expected, StructLen}, {actual, TupleLen}]})
+  end.
 
 %%----------------------------------------------------------------------------------------------------
 
@@ -56,6 +81,6 @@ fget(Module,Struct,Field,DefVal) when is_atom(Module), is_tuple(Struct), is_atom
 %%----------------------------------------------------------------------------------------------------
 %% TODO utils module: to_dict, to_list, to_proplist
 %% TODO dumper function
-%% TODO basic mnesia
 %% TODO basic built in erlang validation
+%% TODO length info about fields
 %%----------------------------------------------------------------------------------------------------

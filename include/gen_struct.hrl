@@ -10,26 +10,36 @@ new() ->
 %%----------------------------------------------------------------------------------------------------
 
 new(Proplist) ->
-  init( gen_struct:new(?MODULE,Proplist) ).
+  init( gen_struct:new(?MODULE, Proplist) ).
+
+%%----------------------------------------------------------------------------------------------------
+
+new_from_list(Proplist) ->
+  init( gen_struct:new_from_list(?MODULE, Proplist) ).
+
+%%----------------------------------------------------------------------------------------------------
+
+new_from_tuple(List) ->
+  init( gen_struct:new_from_tuple(?MODULE, List) ).    
 
 %%----------------------------------------------------------------------------------------------------
 
 fset(Field,Value,Struct) ->
-  gen_struct:fset(?MODULE,Struct,Field,Value).
+  gen_struct:fset(?MODULE, Struct, Field, Value).
 
 %%----------------------------------------------------------------------------------------------------
 
 fset(Proplist,Struct) ->
-  gen_struct:fset(?MODULE,Struct,Proplist).
+  gen_struct:fset(?MODULE, Struct, Proplist).
 
 %%----------------------------------------------------------------------------------------------------
 
 fget(Field,Struct) ->
-  gen_struct:fget(?MODULE,Struct,Field).
+  gen_struct:fget(?MODULE, Struct, Field).
 
 %%----------------------------------------------------------------------------------------------------
 
 fget(Field,DefVal,Struct) ->
-  gen_struct:fget(?MODULE,Struct,Field,DefVal).
+  gen_struct:fget(?MODULE, Struct, Field, DefVal).
 
 %%----------------------------------------------------------------------------------------------------

@@ -5,6 +5,8 @@
     '=record'/0,
     new/0,
     new/1,
+    new_from_list/1,
+    new_from_tuple/1,
     fset/2,
     fset/3,
     fget/2,

@@ -4,10 +4,10 @@
 -export([parse_transform/2]).
 %%----------------------------------------------------------------------------------------------------
 %% TODO create state
--record(state,{eof, ast, opt, record_name, module_name, record_fields}).
+%-record(state,{eof, ast, opt, record_name, module_name, record_fields}).
 %%----------------------------------------------------------------------------------------------------
 
-parse_transform(AST,Options) ->
+parse_transform(AST, _Options) ->
   % io:format("AST: \n~p\n",[AST]),
   NewAST = try
 %%    State = #state{ast=AST, opt=Options},
@@ -27,7 +27,7 @@ parse_transform(AST,Options) ->
     {AST2,LastLineNumber4} = insert_before_eof(AST1,InsertAST2,LastLineNumber3),
 
     {AST3,LastLineNumber5} = insert_record_ast_fun(AST2,ModuleName,LastLineNumber4),
-    {AST4,LastLineNumber6} = insert_init_ast_fun(AST3,LastLineNumber5),
+    {AST4,_LastLineNumber6} = insert_init_ast_fun(AST3,LastLineNumber5),
 
 %%    io:format("AST: ~p\n",[AST4]),
     AST4
@@ -49,7 +49,7 @@ parse_transform(AST,Options) ->
 
 %%----------------------------------------------------------------------------------------------------
 
-has_function(FunctionName,Arity,[])                                         -> false;
+has_function(_FunctionName,_Arity,[])                                         -> false;
 has_function(FunctionName,Arity,[{function,_,FunctionName,Arity,_}=_Fun|_]) -> true;
 has_function(FunctionName,Arity,[_|Rest])                                   -> has_function(FunctionName,Arity,Rest).
 
