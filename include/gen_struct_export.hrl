@@ -2,7 +2,9 @@
 -export([
     '=field'/1,
     '=fields'/0,
+    '=fields_num'/0,
     '=record'/0,
+    '=pk'/0,
     new/0,
     new/1,
     new_from_list/1,

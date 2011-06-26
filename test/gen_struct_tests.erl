@@ -137,14 +137,6 @@ multi_fset_test_() ->
 
 %%--------------------------------------------------------------------------------------------------
 
-start_stop_test() ->
-  ok = application:start(gen_struct),
-  ok = application:stop(gen_struct),
-  ok = application:start(gen_struct),
-  ok.
-
-%%--------------------------------------------------------------------------------------------------
-
 new_from_tuple_test_() ->
   M1 = test_struct1,
   Tuple1 = {1,2,3,4,5,6,7,8},
@@ -170,5 +162,34 @@ new_from_list_test_() ->
                       {invalid_number_of_arguments,[{expected, 8}, {actual, 9}]},
                       M1:new_from_list(List2))
   ].
+
+%%--------------------------------------------------------------------------------------------------
+
+meta_functions_test_() ->
+  M1 = test_struct1,
+  M2 = test_struct2,
+  Record1 = {test_struct1,1,undefined,11.11,<<"12345">>,
+              {1,2,3,4,5},
+              [1,2,3,4,5],
+              "12345",
+              {test_record,1,2,3,4,5}},
+
+  [
+    ?_assertException(throw, {invalid_field,[{field,42}]}, M1:'=field'(42) ),
+    ?_assertEqual(2, M1:'=field'(field1) ),
+    ?_assertEqual([field1, field2, field3, field4, field5, field6, field7, field8], M1:'=fields'() ),
+    ?_assertEqual(Record1, M1:'=record'() ),
+    ?_assertEqual(field1, M1:'=pk'() ),
+    ?_assertEqual(undefined, M2:'=pk'() ),
+    ?_assertEqual(8, M1:'=fields_num'() )
+  ].
+
+%%--------------------------------------------------------------------------------------------------
+
+start_stop_test() ->
+  ok = application:start(gen_struct),
+  ok = application:stop(gen_struct),
+  ok = application:start(gen_struct),
+  ok.
 
 %%--------------------------------------------------------------------------------------------------

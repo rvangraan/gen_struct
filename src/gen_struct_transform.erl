@@ -3,7 +3,8 @@
 %%----------------------------------------------------------------------------------------------------
 -export([parse_transform/2]).
 %%----------------------------------------------------------------------------------------------------
-%% TODO create state
+%% TODO: clean up this file a bit
+%% TODO: create state
 %-record(state,{eof, ast, opt, record_name, module_name, record_fields}).
 %%----------------------------------------------------------------------------------------------------
 
@@ -11,26 +12,28 @@ parse_transform(AST, _Options) ->
   % io:format("AST: \n~p\n",[AST]),
   NewAST = try
 %%    State = #state{ast=AST, opt=Options},
-    LastLineNumber = get_last_line_number(AST),
-    ModuleName = get_module_name(AST),
-    ModuleRecord = get_record(ModuleName,AST),
-    RecordFields = get_record_fields(ModuleRecord),
-    % io:format("LastLineNumber: ~p\n",[LastLineNumber]),
-    % io:format("ModuleName: ~p\n",[ModuleName]),
-    % io:format("ModuleRecord: ~p\n",[ModuleRecord]),
-    % io:format("RecordFields: ~p\n",[RecordFields]),
+  LastLineNumber = get_last_line_number(AST),
+  ModuleName     = get_module_name(AST),
+  ModuleRecord   = get_record(ModuleName,AST),
+  RecordFields   = get_record_fields(ModuleRecord),
+  % io:format("LastLineNumber: ~p\n",[LastLineNumber]),
+  % io:format("ModuleName: ~p\n",[ModuleName]),
+  % io:format("ModuleRecord: ~p\n",[ModuleRecord]),
+  % io:format("RecordFields: ~p\n",[RecordFields]),
 
-    {InsertAST1,LastLineNumber1} = gen_fields_idx_fun_ast(RecordFields,LastLineNumber),
-    {AST1,LastLineNumber2} = insert_before_eof(AST,InsertAST1,LastLineNumber1),
+  {InsertAST1, LastLineNumber1} = gen_fields_idx_fun_ast(RecordFields,LastLineNumber),
+  {AST1, LastLineNumber2} = insert_before_eof(AST,InsertAST1,LastLineNumber1),
 
-    {InsertAST2,LastLineNumber3} = gen_fields_lst_fun_ast(RecordFields,LastLineNumber2),
-    {AST2,LastLineNumber4} = insert_before_eof(AST1,InsertAST2,LastLineNumber3),
+  {InsertAST2, LastLineNumber3} = gen_fields_lst_fun_ast(RecordFields,LastLineNumber2),
+  {AST2, LastLineNumber4} = insert_before_eof(AST1,InsertAST2,LastLineNumber3),
 
-    {AST3,LastLineNumber5} = insert_record_ast_fun(AST2,ModuleName,LastLineNumber4),
-    {AST4,_LastLineNumber6} = insert_init_ast_fun(AST3,LastLineNumber5),
+  {AST3, LastLineNumber5} = insert_record_ast_fun(AST2, ModuleName, LastLineNumber4),
+  {AST4, _LastLineNumber6} = insert_init_ast_fun(AST3, LastLineNumber5),
+  {AST5, _} = insert_pk_ast_fun(AST4),
+  {AST6, _} = insert_num_of_fields_ast_fun(AST5, RecordFields),
 
-%%    io:format("AST: ~p\n",[AST4]),
-    AST4
+  %% io:format("AST: ~p\n",[AST5]),
+  AST6
 
   catch
     throw:{invalid_record_field,Params} ->
@@ -47,13 +50,16 @@ parse_transform(AST, _Options) ->
   end,
   NewAST.
 
-%%----------------------------------------------------------------------------------------------------
+%%--------------------------------------------------------------------------------------------------
 
-has_function(_FunctionName,_Arity,[])                                         -> false;
-has_function(FunctionName,Arity,[{function,_,FunctionName,Arity,_}=_Fun|_]) -> true;
-has_function(FunctionName,Arity,[_|Rest])                                   -> has_function(FunctionName,Arity,Rest).
+has_function(_FunctionName, _Arity,[]) -> 
+  false;
+has_function(FunctionName, Arity, [{function, _, FunctionName, Arity, _}|_]) -> 
+  true;
+has_function(FunctionName, Arity, [_|Rest]) -> 
+  has_function(FunctionName, Arity, Rest).
 
-%%----------------------------------------------------------------------------------------------------
+%%--------------------------------------------------------------------------------------------------
 
 get_last_line_number([{eof,LineNum}|_]) -> LineNum;
 get_last_line_number([_|Rest])          -> get_last_line_number(Rest).
@@ -87,7 +93,7 @@ gen_fields_idx_fun_ast(Fields,LastLineNumber) ->
 
 
 gen_fields_idx_fun_ast_loop([],LastLineNumber,_,Acc) -> 
-  Acc1 = Acc ++ "'=field'(_) -> throw(invalid_field). \n",
+  Acc1 = Acc ++ "'=field'(Field) -> throw({invalid_field,[{field, Field}]}). \n",
   from_str_to_ast(Acc1,LastLineNumber);
 
 gen_fields_idx_fun_ast_loop([Field|Fields],LastLineNumber,Index,Acc) ->
@@ -109,8 +115,8 @@ insert_record_ast_fun(AST,RecordName,LastLineNumber) ->
 
 %%----------------------------------------------------------------------------------------------------
 
-insert_init_ast_fun(AST,LastLineNumber) ->
-  case has_function(init,1,AST) of
+insert_init_ast_fun(AST, LastLineNumber) ->
+  case has_function(init, 1, AST) of
     false -> 
       Str = "init(Struct) -> Struct.",
       {InsertAST, NewLastLineNumber} = from_str_to_ast(Str,LastLineNumber),
@@ -119,24 +125,47 @@ insert_init_ast_fun(AST,LastLineNumber) ->
       {AST, LastLineNumber}
   end.
 
-%%----------------------------------------------------------------------------------------------------
+%%--------------------------------------------------------------------------------------------------
 
-from_str_to_ast(Str,LastLineNumber) ->
-  {ok, Tokens, NewLastLineNumber} = erl_scan:string(Str,LastLineNumber),
+insert_num_of_fields_ast_fun(AST, RecordFields) ->
+  LastLineNumber = get_last_line_number(AST),
+
+  Len = length(RecordFields),
+  Str = "'=fields_num'() -> "++ integer_to_list(Len) ++".",
+  {InsertAST, NewLastLineNumber} = from_str_to_ast(Str, LastLineNumber),
+  insert_before_eof(AST, InsertAST, NewLastLineNumber).
+
+%%--------------------------------------------------------------------------------------------------
+
+insert_pk_ast_fun(AST) ->
+  LastLineNumber = get_last_line_number(AST),
+
+  case has_function('=pk', 0, AST) of
+    false -> 
+      Str = "'=pk'() -> undefined.",
+      {InsertAST, NewLastLineNumber} = from_str_to_ast(Str, LastLineNumber),
+      insert_before_eof(AST, InsertAST, NewLastLineNumber);
+    true ->
+      {AST, LastLineNumber}
+  end.
+
+%%--------------------------------------------------------------------------------------------------
+
+from_str_to_ast(Str, LastLineNumber) ->
+  {ok, Tokens, NewLastLineNumber} = erl_scan:string(Str, LastLineNumber),
   {ok, AST} = erl_parse:parse_form(Tokens),                             
   {AST, NewLastLineNumber}.
 
 %%----------------------------------------------------------------------------------------------------
 
-insert_before_eof(AST,InsertAST,NewLastLineNumber) ->
-  insert_before_eof_loop(AST,InsertAST,NewLastLineNumber,[]).
+insert_before_eof(AST, InsertAST, NewLastLineNumber) ->
+  insert_before_eof_loop(AST, InsertAST, NewLastLineNumber,[]).
 
-
-insert_before_eof_loop([{eof,_LastLineNumber}|_],InsertAST,NewLastLineNumber,Acc) -> 
+insert_before_eof_loop([{eof,_LastLineNumber}|_], InsertAST, NewLastLineNumber, Acc) -> 
   Acc1 = [{eof,NewLastLineNumber},InsertAST|Acc],
-  {lists:reverse(Acc1),NewLastLineNumber};
+  {lists:reverse(Acc1), NewLastLineNumber};
 
-insert_before_eof_loop([ASTElemnt|Rest],InsertAST,NumberOfLines,Acc) -> 
-  insert_before_eof_loop(Rest,InsertAST,NumberOfLines,[ASTElemnt|Acc]).
+insert_before_eof_loop([ASTElemnt|Rest], InsertAST, NumberOfLines, Acc) -> 
+  insert_before_eof_loop(Rest, InsertAST, NumberOfLines, [ASTElemnt|Acc]).
 
 %%----------------------------------------------------------------------------------------------------

@@ -29,7 +29,6 @@ new(Module,Proplist) when is_atom(Module), is_list(Proplist) ->
 
 %%----------------------------------------------------------------------------------------------------
 
-%% TODO
 new_from_list(Module, List) when is_atom(Module), is_list(List) ->
   Fields = ?FIELDS(Module),
   StructLen = length(Fields),
@@ -79,8 +78,7 @@ fget(Module,Struct,Field,DefVal) when is_atom(Module), is_tuple(Struct), is_atom
   end.
 
 %%----------------------------------------------------------------------------------------------------
-%% TODO utils module: to_dict, to_list, to_proplist
+%% TODO utils module: to_dict, to_list, to_proplist, to_json
 %% TODO dumper function
 %% TODO basic built in erlang validation
-%% TODO length info about fields
 %%----------------------------------------------------------------------------------------------------
