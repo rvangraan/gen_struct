@@ -9,7 +9,8 @@
     fset/3,
     fset/4,
     fget/3,
-    fget/4
+    fget/4,
+    to_json/2
   ]).
 %%--------------------------------------------------------------------------------------------------
 -define(FIELDS(M),  M:'=fields'() ).
@@ -78,7 +79,16 @@ fget(Module,Struct,Field,DefVal) when is_atom(Module), is_tuple(Struct), is_atom
   end.
 
 %%--------------------------------------------------------------------------------------------------
-%% TODO utils module: to_dict, to_list, to_proplist, to_json
+
+to_json(Module, Struct) ->
+  Fields = ?FIELDS(Module),
+  Data = [{Field, fget(Module, Struct, Field)} || Field <- Fields],
+  {Data}.  
+
+%%--------------------------------------------------------------------------------------------------
+
+%% TODO: new from json
+%% TODO utils module: to_dict, to_list, to_proplist, to_json (TODO test)
 %% TODO dumper function
 %% TODO basic built in erlang validation
 %%--------------------------------------------------------------------------------------------------
