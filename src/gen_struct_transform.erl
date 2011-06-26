@@ -9,7 +9,7 @@
 %%--------------------------------------------------------------------------------------------------
 
 parse_transform(AST, _Options) ->
-  % io:format("AST: \n~p\n",[AST]),
+  %% io:format("AST: \n~p\n",[AST]),
   NewAST = try
 %%    State = #state{ast=AST, opt=Options},
   LastLineNumber = get_last_line_number(AST),
@@ -32,7 +32,7 @@ parse_transform(AST, _Options) ->
   {AST5, _} = insert_pk_ast_fun(AST4),
   {AST6, _} = insert_num_of_fields_ast_fun(AST5, RecordFields),
 
-  %% io:format("AST: ~p\n",[AST5]),
+  %%io:format("AST: ~p\n",[AST5]),
   AST6
 
   catch
