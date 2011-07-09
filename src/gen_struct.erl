@@ -10,12 +10,19 @@
     fset/4,
     fget/3,
     fget/4,
-    to_json/2
+    to_json/2,
+    to_list/2,
+    to_proplist/2,
+    to_proplist/3
   ]).
 %%--------------------------------------------------------------------------------------------------
--define(FIELDS(M),  M:'=fields'() ).
--define(INDEX(M,F), M:'=field'(F) ).
--define(RECORD(M),  M:'=record'() ).
+-define(FIELD(M, K),    M:'=field'(K) ).
+-define(FIELDS(M),      M:'=fields'() ).
+-define(FIELDS_NUM(M),  M:'=fields_num'() ).
+-define(INDEX(M,F),     M:'=field'(F) ).
+-define(RECORD(M),      M:'=record'() ).
+-define(PK(M),          M:'=pk'() ).
+-define(SERIAL(M),      M:'=serial'() ).
 %%--------------------------------------------------------------------------------------------------
 
 new(Module) when is_atom(Module) ->
@@ -87,8 +94,31 @@ to_json(Module, Struct) ->
 
 %%--------------------------------------------------------------------------------------------------
 
+to_list(Module, Struct) ->
+  Fields = ?FIELDS(Module),
+  Data = [ fget(Module, Struct, Field) || Field <- Fields],
+  Data.
+
+%%--------------------------------------------------------------------------------------------------
+
+to_proplist(Module, Struct) ->
+  Fields = ?FIELDS(Module),
+  Data = [{Field, fget(Module, Struct, Field)} || Field <- Fields],
+  Data.  
+
+to_proplist(Module, Struct, filter_undefined) ->
+  F = fun(V, Acc) ->
+    case V of
+      {_, undefined} -> Acc;
+      _              -> [V|Acc]
+    end
+  end,
+  lists:foldl(F, [], to_proplist(Module, Struct) ).
+
+%%--------------------------------------------------------------------------------------------------
+
 %% TODO: new from json
-%% TODO utils module: to_dict, to_list, to_proplist, to_json (TODO test)
+%% TODO utils module: to_dict
 %% TODO dumper function
 %% TODO basic built in erlang validation
 %%--------------------------------------------------------------------------------------------------

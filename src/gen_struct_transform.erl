@@ -30,10 +30,11 @@ parse_transform(AST, _Options) ->
   {AST3, LastLineNumber5} = insert_record_ast_fun(AST2, ModuleName, LastLineNumber4),
   {AST4, _LastLineNumber6} = insert_init_ast_fun(AST3, LastLineNumber5),
   {AST5, _} = insert_pk_ast_fun(AST4),
-  {AST6, _} = insert_num_of_fields_ast_fun(AST5, RecordFields),
+  {AST6, _} = insert_serial_ast_fun(AST5),
+  {AST7, _} = insert_num_of_fields_ast_fun(AST6, RecordFields),
 
   %%io:format("AST: ~p\n",[AST5]),
-  AST6
+  AST7
 
   catch
     throw:{invalid_record_field,Params} ->
@@ -153,6 +154,20 @@ insert_pk_ast_fun(AST) ->
   case has_function('=pk', 0, AST) of
     false -> 
       Str = "'=pk'() -> undefined.",
+      {InsertAST, NewLastLineNumber} = from_str_to_ast(Str, LastLineNumber),
+      insert_before_eof(AST, InsertAST, NewLastLineNumber);
+    true ->
+      {AST, LastLineNumber}
+  end.
+
+%%--------------------------------------------------------------------------------------------------
+
+insert_serial_ast_fun(AST) ->
+  LastLineNumber = get_last_line_number(AST),
+
+  case has_function('=serial', 0, AST) of
+    false -> 
+      Str = "'=serial'() -> undefined.",
       {InsertAST, NewLastLineNumber} = from_str_to_ast(Str, LastLineNumber),
       insert_before_eof(AST, InsertAST, NewLastLineNumber);
     true ->
