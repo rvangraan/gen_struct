@@ -28,6 +28,11 @@ new_from_tuple(List) ->
   init( gen_struct:new_from_tuple(?MODULE, List) ).    
 
 %%--------------------------------------------------------------------------------------------------
+
+new_from_proplist(Proplist) ->
+  init( gen_struct:new_from_proplist(?MODULE, Proplist) ).    
+
+%%--------------------------------------------------------------------------------------------------
 %% Set/Get
 %%--------------------------------------------------------------------------------------------------
 
@@ -53,13 +58,13 @@ fget(Field, DefVal, Struct) ->
 %% Exports
 %%--------------------------------------------------------------------------------------------------
 
-to_json(Struct) ->
-  gen_struct:to_json(?MODULE, Struct).
+to_list(Struct) ->
+  gen_struct:to_list(?MODULE, Struct).
 
 %%--------------------------------------------------------------------------------------------------
 
-to_list(Struct) ->
-  gen_struct:to_list(?MODULE, Struct).
+to_tuple(Struct) ->
+  gen_struct:to_tuple(?MODULE, Struct).
 
 %%--------------------------------------------------------------------------------------------------
 
@@ -72,15 +77,32 @@ to_proplist(Opts, Struct) ->
   gen_struct:to_proplist(?MODULE, Struct, Opts).
 
 %%--------------------------------------------------------------------------------------------------
+
+to_json(Struct) ->
+  gen_struct:to_json(?MODULE, Struct).
+
+%%--------------------------------------------------------------------------------------------------
 %% DBI
 %%--------------------------------------------------------------------------------------------------
+%% TODO: macro if/end
 
-insert(Conn, Struct) ->
-  gen_dbi_struct:insert(?MODULE, Struct, Conn).
+insert(DBH, Struct) ->
+  gen_dbi_struct:insert(?MODULE, Struct, DBH).
 
 %%--------------------------------------------------------------------------------------------------
 
-lookup(Conn) ->
-  gen_dbi_struct:lookup(?MODULE, Conn).
+delete(DBH, Struct) when ?MODULE =:= element(1, Struct) ->
+  gen_dbi_struct:delete(?MODULE, Struct, DBH).
+
+%%--------------------------------------------------------------------------------------------------
+
+lookup(DBH) ->
+  gen_dbi_struct:lookup(?MODULE, DBH).
+
+lookup(DBH, PrimaryKey) when is_tuple(PrimaryKey) ->
+  gen_dbi_struct:lookup(?MODULE, DBH, PrimaryKey);
+
+lookup(DBH, Proplist) when is_list(Proplist) ->
+  gen_dbi_struct:lookup(?MODULE, DBH, Proplist).  
 
 %%--------------------------------------------------------------------------------------------------

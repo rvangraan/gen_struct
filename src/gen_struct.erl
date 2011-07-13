@@ -6,14 +6,16 @@
     new/2,
     new_from_list/2,
     new_from_tuple/2,
+    new_from_proplist/2,
     fset/3,
     fset/4,
     fget/3,
     fget/4,
-    to_json/2,
     to_list/2,
+    to_tuple/2,
     to_proplist/2,
-    to_proplist/3
+    to_proplist/3,
+    to_json/2
   ]).
 %%--------------------------------------------------------------------------------------------------
 -define(FIELD(M, K),    M:'=field'(K) ).
@@ -30,10 +32,15 @@ new(Module) when is_atom(Module) ->
 
 %%--------------------------------------------------------------------------------------------------
 
-new(Module,Proplist) when is_atom(Module), is_list(Proplist) ->
+new(Module, Proplist) when is_atom(Module), is_list(Proplist) ->
   Struct = ?RECORD(Module),
   Keys = proplists:get_keys(Proplist),
   lists:foldl(fun(K,S) -> S:fset(K, proplists:get_value(K,Proplist)) end, Struct, Keys).
+
+%%--------------------------------------------------------------------------------------------------
+
+new_from_proplist(Module, Proplist) when is_atom(Module), is_list(Proplist) ->
+  new(Module, Proplist).
 
 %%--------------------------------------------------------------------------------------------------
 
@@ -87,18 +94,18 @@ fget(Module,Struct,Field,DefVal) when is_atom(Module), is_tuple(Struct), is_atom
 
 %%--------------------------------------------------------------------------------------------------
 
-to_json(Module, Struct) ->
-  Fields = ?FIELDS(Module),
-  Data = [{Field, fget(Module, Struct, Field)} || Field <- Fields],
-  {Data}.  
-
-%%--------------------------------------------------------------------------------------------------
-
 to_list(Module, Struct) ->
   Fields = ?FIELDS(Module),
   Data = [ fget(Module, Struct, Field) || Field <- Fields],
   Data.
 
+%%--------------------------------------------------------------------------------------------------
+
+to_tuple(Module, Struct) ->
+  Fields = ?FIELDS(Module),
+  Data = [{Field, fget(Module, Struct, Field)} || Field <- Fields],
+  list_to_tuple(Data).  
+ 
 %%--------------------------------------------------------------------------------------------------
 
 to_proplist(Module, Struct) ->
@@ -114,6 +121,13 @@ to_proplist(Module, Struct, filter_undefined) ->
     end
   end,
   lists:foldl(F, [], to_proplist(Module, Struct) ).
+
+%%--------------------------------------------------------------------------------------------------
+
+to_json(Module, Struct) ->
+  Fields = ?FIELDS(Module),
+  Data = [{Field, fget(Module, Struct, Field)} || Field <- Fields],
+  {Data}.  
 
 %%--------------------------------------------------------------------------------------------------
 
