@@ -165,6 +165,14 @@ new_from_list_test_() ->
 
 %%--------------------------------------------------------------------------------------------------
 
+new_from_proplist_test() ->
+  M1 = test_struct1,
+  S1 = M1:new_from_proplist([{field1, 2}]),
+
+  ?assertMatch(2, S1:fget(field1)).
+
+%%--------------------------------------------------------------------------------------------------
+
 meta_functions_test_() ->
   M1 = test_struct1,
   M2 = test_struct2,
@@ -186,7 +194,75 @@ meta_functions_test_() ->
 
 %%--------------------------------------------------------------------------------------------------
 
+to_list_test() ->
+  M1 = test_struct1,
+  S1 = M1:new(),
+  List = [1,undefined,11.11,<<"12345">>,
+    {1,2,3,4,5},
+    [1,2,3,4,5],
+    "12345",
+    {test_record,1,2,3,4,5}],
 
+  ?assertMatch(List, S1:to_list()).
+
+%%--------------------------------------------------------------------------------------------------
+
+to_tuple_test() ->
+  M1 = test_struct1,
+  S1 = M1:new(),
+  Tuple = {1,undefined,11.11,<<"12345">>,
+    {1,2,3,4,5},
+    [1,2,3,4,5],
+    "12345",
+    {test_record,1,2,3,4,5}},
+
+  io:format("~p\n",[S1:to_tuple()]),
+  ?assertMatch(Tuple, S1:to_tuple()).
+
+%%--------------------------------------------------------------------------------------------------  
+
+to_proplist_test_() ->
+  M1 = test_struct1,
+  S1 = M1:new(),
+  Proplist1 = [{field1,1},
+    {field2,undefined},
+    {field3,11.11},
+    {field4,<<"12345">>},
+    {field5,{1,2,3,4,5}},
+    {field6,[1,2,3,4,5]},
+    {field7,"12345"},
+    {field8,{test_record,1,2,3,4,5}}],
+
+  Proplist2 = [{field8,{test_record,1,2,3,4,5}},
+    {field7,"12345"},
+    {field6,[1,2,3,4,5]},
+    {field5,{1,2,3,4,5}},
+    {field4,<<"12345">>},
+    {field3,11.11},
+    {field1,1}],
+
+  [
+    ?_assertMatch(Proplist1, S1:to_proplist()),
+    ?_assertMatch(Proplist2, S1:to_proplist(filter_undefined))
+  ].
+
+%%--------------------------------------------------------------------------------------------------  
+
+to_json_test() ->
+  M1 = test_struct1,
+  S1 = M1:new(),
+  Proplist = {[{field1,1},
+    {field2,undefined},
+    {field3,11.11},
+    {field4,<<"12345">>},
+    {field5,{1,2,3,4,5}},
+    {field6,[1,2,3,4,5]},
+    {field7,"12345"},
+    {field8,{test_record,1,2,3,4,5}}]},
+
+  ?assertMatch(Proplist, S1:to_json()).
+
+%%--------------------------------------------------------------------------------------------------  
 
 start_stop_test() ->
   ok = application:start(gen_struct),

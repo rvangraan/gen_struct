@@ -103,7 +103,7 @@ to_list(Module, Struct) ->
 
 to_tuple(Module, Struct) ->
   Fields = ?FIELDS(Module),
-  Data = [{Field, fget(Module, Struct, Field)} || Field <- Fields],
+  Data = [fget(Module, Struct, Field) || Field <- Fields],
   list_to_tuple(Data).  
  
 %%--------------------------------------------------------------------------------------------------
