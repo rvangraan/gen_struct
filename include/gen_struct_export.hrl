@@ -34,6 +34,7 @@
 -export([
   insert/2,
   delete/2,
+  update/3,
   lookup/1,
   lookup/2
 ]).

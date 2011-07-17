@@ -135,4 +135,5 @@ to_json(Module, Struct) ->
 %% TODO utils module: to_dict
 %% TODO dumper function
 %% TODO basic built in erlang validation
+%% TODO validation for the web?
 %%--------------------------------------------------------------------------------------------------

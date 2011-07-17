@@ -96,6 +96,11 @@ delete(DBH, Struct) when ?MODULE =:= element(1, Struct) ->
 
 %%--------------------------------------------------------------------------------------------------
 
+update(DBH, Fields, Struct) ->
+  gen_dbi_struct:update(?MODULE, Struct, DBH, Fields).
+
+%%--------------------------------------------------------------------------------------------------
+
 lookup(DBH) ->
   gen_dbi_struct:lookup(?MODULE, DBH).
 
