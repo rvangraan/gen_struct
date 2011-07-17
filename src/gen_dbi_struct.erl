@@ -2,16 +2,19 @@
 -module(gen_dbi_struct).
 %%--------------------------------------------------------------------------------------------------
 -include_lib("gen_dbi/include/gen_dbi.hrl").
+-include_lib("eunit/include/eunit.hrl").
 %%--------------------------------------------------------------------------------------------------
 -export([
   insert/3,
   lookup/2,
   lookup/3,
   delete/3,
-  test/0
+  test1/0
   % update
   % delete
 ]).
+%%--------------------------------------------------------------------------------------------------
+-include_lib("osw_common/include/testhelper.hrl").
 %%--------------------------------------------------------------------------------------------------
 -define(FIELD(M, K),    M:'=field'(K) ).
 -define(FIELDS(M),      M:'=fields'() ).
@@ -29,10 +32,23 @@
 
 %% get all
 lookup(Module, DBH) when is_atom(Module), is_record(DBH, gen_dbi_dbh) ->
-  SQL = "SELECT * FROM "++ atom_to_list(Module) ++";",
-  io:format("* SELECT * FROM ~s; \n",[atom_to_list(Module)]),
+  SQL = "SELECT * FROM "++ atom_to_list(Module) ++" ;",
   gen_dbi:fetch_structs(DBH, SQL, Module).
 
+%%--------------------------------------------------------------------------------------------------
+
+lookup_all_test() ->
+  F = fun(_DBH, SQL, _Module) ->
+    ?assertEqual( SQL, "SELECT * FROM currency ;")
+  end,
+
+  mock(gen_dbi),
+  meck:expect(gen_dbi, fetch_structs, F),
+
+  DBH = #gen_dbi_dbh{driver = pg, driver_config = [], handle = {}},
+
+  lookup(currency, DBH).
+  
 %%--------------------------------------------------------------------------------------------------
 
 %% get on pk, !!NOTE!! must be a tuple !!NOTE!!
@@ -48,7 +64,7 @@ lookup(Module, DBH, PrimaryKey) when is_tuple(PrimaryKey) ->
   SQLWhere = format_placeholders_where(Keys),
 
   SQL = lists:flatten(
-    io_lib:format("SELECT * FROM ~s WHERE ~s;", 
+    io_lib:format("SELECT * FROM ~s WHERE ~s ;", 
     [SQLTable, SQLWhere])),
   io:format("* ~s\n",[SQL]),
 
@@ -71,15 +87,48 @@ lookup(Module, DBH, Proplist) when is_list(Proplist) ->
   SQLWhere = format_placeholders_where(Keys),
 
   SQL = lists:flatten(
-    io_lib:format("SELECT * FROM ~s WHERE ~s;", 
+    io_lib:format("SELECT * FROM ~s WHERE ~s ;", 
     [SQLTable, SQLWhere])),
-  io:format("* ~s\n",[SQL]),
 
   case gen_dbi:fetch_structs(DBH, SQL, Values, Module) of
     Err when element(1,Err) =:= error -> Err;
     {ok, Res} -> 
       {ok, hd(Res)}
   end.
+
+%%--------------------------------------------------------------------------------------------------
+
+lookup_on_proplist_test_() ->
+  F = fun(_DBH, SQL, _Values, _Module) ->
+    {ok, [SQL]}
+  end,
+
+  mock(gen_dbi),
+  meck:expect(gen_dbi, fetch_structs, F),
+
+  DBH = #gen_dbi_dbh{driver = pg, driver_config = [], handle = {}},
+
+  [ 
+    ?_assertException(throw, proplist_is_empty, lookup(currency, DBH, []) ),
+    ?_assertEqual( lookup(currency, DBH, [{u_code, 987}]), {ok, "SELECT * FROM currency WHERE u_code = $1 ;"})
+  ].
+
+%%--------------------------------------------------------------------------------------------------
+
+lookup_on_pk_test_() ->
+  F = fun(_DBH, SQL, _Values, _Module) ->
+    {ok, [SQL]}
+  end,
+
+  mock(gen_dbi),
+  meck:expect(gen_dbi, fetch_structs, F),
+
+  DBH = #gen_dbi_dbh{driver = pg, driver_config = [], handle = {}},
+
+  [ 
+    ?_assertException(throw, tuple_is_empty, lookup(currency, DBH, {}) ),
+    ?_assertEqual( lookup(currency, DBH, {1}), {ok, "SELECT * FROM currency WHERE u_id = $1 ;"})
+  ].
 
 %%--------------------------------------------------------------------------------------------------
 
@@ -95,15 +144,31 @@ insert(Module, Struct, DBH) ->
   SQLTable = atom_to_list(Module),
 
   SQL= lists:flatten(
-    io_lib:format("INSERT INTO ~s ~s VALUES ~s RETURNING *;", 
+    io_lib:format("INSERT INTO ~s ~s VALUES ~s RETURNING * ;", 
     [SQLTable, SQLInto, SQLPlaceholders])),
-  io:format("* ~p\n",[SQL]),
 
-  {ok, Sth} = gen_dbi:prepare(DBH, SQL),
-  case gen_dbi:execute(Sth, Values) of
-   {ok, 1, [Inserted]} -> {ok, Module:new_from_tuple(Inserted)};
+  case gen_dbi:execute(DBH, SQL, Values) of
+   {ok, 1, _Columns, [Inserted]} -> {ok, Module:new_from_tuple(Inserted)};
    Err -> Err
   end.
+
+%%--------------------------------------------------------------------------------------------------
+
+insert_test() ->
+  Proplist = [{u_id,1}, {u_code, 987}, {u_name,"NAN"}],
+
+  F = fun(_DBH, SQL, _Values) ->
+    ?assertEqual(SQL, "INSERT INTO currency ( u_name, u_code, u_id ) VALUES ( $1, $2, $3 ) RETURNING * ;"),
+    {ok, 1, [], [{1,987,"NAN"}]}
+  end,
+
+  mock(gen_dbi),
+  meck:expect(gen_dbi, execute, F),
+
+  Currency = currency:new(Proplist),
+  DBH = #gen_dbi_dbh{driver = pg, driver_config = [], handle = {}},
+
+  ?assertEqual( insert(currency, Currency, DBH), {ok, Currency}).
 
 %%--------------------------------------------------------------------------------------------------
 
@@ -122,15 +187,37 @@ delete(Module, Struct, DBH) ->
   SQLTable = atom_to_list(Module),
 
   SQL = lists:flatten(
-    io_lib:format("DELETE FROM ~s WHERE ~s RETURNING *;",
+    io_lib:format("DELETE FROM ~s WHERE ~s RETURNING * ;",
     [SQLTable, SQLWhere])),
-  io:format("* ~s\n", [SQL]),
 
   case gen_dbi:execute(DBH, SQL, Values) of
     Err when element(1,Err) =:= error -> Err;
     Res -> 
       {ok, hd(gen_dbi:result_to_structs(DBH, Res, Module))}
   end.
+
+%%--------------------------------------------------------------------------------------------------
+
+delete_test() ->
+  Proplist = [{u_id,1}, {u_code, 987}, {u_name,"NAN"}],
+
+  F1 = fun(_DBH, SQL, _Values) ->
+    ?assertEqual(SQL, "DELETE FROM currency WHERE u_id = $1 RETURNING * ;"),
+    ok
+  end,
+
+  F2 = fun(_DBH, Res, _Module) ->
+    [Res]
+  end,
+
+  mock(gen_dbi),
+  meck:expect(gen_dbi, execute, F1),
+  meck:expect(gen_dbi, result_to_structs, F2),
+
+  Currency = currency:new(Proplist),
+  DBH = #gen_dbi_dbh{driver = pg, driver_config = [], handle = {}},
+
+  ?assertEqual( delete(currency, Currency, DBH), {ok, ok}).
 
 %%--------------------------------------------------------------------------------------------------
 %% Internal
@@ -189,7 +276,7 @@ get_serial_columns(Module) ->
 %% Test
 %%--------------------------------------------------------------------------------------------------
 
-test() ->
+test1() ->
   F = fun(DBH) ->
 
     %% create struct
