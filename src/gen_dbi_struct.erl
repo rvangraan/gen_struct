@@ -191,6 +191,8 @@ insert_test() ->
 
 %%--------------------------------------------------------------------------------------------------
 
+%% TODO: update from a proplist
+
 update(Module, Struct, DBH, Fields) 
 when 
   is_atom(Module), 
