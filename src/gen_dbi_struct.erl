@@ -42,7 +42,7 @@ when
 
 lookup_all_test() ->
   F = fun(_DBH, SQL, _Module) ->
-    ?assertEqual( SQL, "SELECT * FROM currency ;")
+    ?assertEqual( SQL, "SELECT * FROM db_currency ;")
   end,
 
   mock(gen_dbi),
@@ -50,7 +50,7 @@ lookup_all_test() ->
 
   DBH = #gen_dbi_dbh{driver = pg, driver_config = [], handle = {}},
 
-  lookup(currency, DBH).
+  lookup(db_currency, DBH).
   
 %%--------------------------------------------------------------------------------------------------
 
@@ -68,7 +68,7 @@ when
   Keys = get_primary_columns(Module),
   Values = tuple_to_list(PrimaryKey),
 
-  SQLTable = atom_to_list(Module),
+  SQLTable = get_table_name(Module),
   SQLWhere = format_placeholders_where(Keys),
 
   SQL = lists:flatten(
@@ -95,7 +95,7 @@ when
   Keys = ?PROPLIST_KEYS(Proplist),
   Values = ?PROPLIST_VALUES(Proplist),
 
-  SQLTable = atom_to_list(Module),
+  SQLTable = get_table_name(Module),
   SQLWhere = format_placeholders_where(Keys),
 
   SQL = lists:flatten(
@@ -121,8 +121,8 @@ lookup_on_proplist_test_() ->
   DBH = #gen_dbi_dbh{driver = pg, driver_config = [], handle = {}},
 
   [ 
-    ?_assertException(throw, proplist_is_empty, lookup(currency, DBH, []) ),
-    ?_assertEqual( lookup(currency, DBH, [{u_code, 987}]), {ok, "SELECT * FROM currency WHERE u_code = $1 ;"})
+    ?_assertException(throw, proplist_is_empty, lookup(db_currency, DBH, []) ),
+    ?_assertEqual( lookup(db_currency, DBH, [{u_code, 987}]), {ok, "SELECT * FROM db_currency WHERE u_code = $1 ;"})
   ].
 
 %%--------------------------------------------------------------------------------------------------
@@ -138,8 +138,8 @@ lookup_on_pk_test_() ->
   DBH = #gen_dbi_dbh{driver = pg, driver_config = [], handle = {}},
 
   [ 
-    ?_assertException(throw, tuple_is_empty, lookup(currency, DBH, {}) ),
-    ?_assertEqual( lookup(currency, DBH, {1}), {ok, "SELECT * FROM currency WHERE u_id = $1 ;"})
+    ?_assertException(throw, tuple_is_empty, lookup(db_currency, DBH, {}) ),
+    ?_assertEqual( lookup(db_currency, DBH, {1}), {ok, "SELECT * FROM db_currency WHERE u_id = $1 ;"})
   ].
 
 %%--------------------------------------------------------------------------------------------------
@@ -159,7 +159,7 @@ when
 
   SQLInto = format_columns_list(Columns),
   SQLPlaceholders = format_placeholders_list(ColumnsLen),
-  SQLTable = atom_to_list(Module),
+  SQLTable = get_table_name(Module),
 
   SQL = lists:flatten(
     io_lib:format("INSERT INTO ~s ~s VALUES ~s RETURNING * ;", 
@@ -176,17 +176,17 @@ insert_test() ->
   Proplist = [{u_id,1}, {u_code, 987}, {u_name,"NAN"}],
 
   F = fun(_DBH, SQL, _Values) ->
-    ?assertEqual(SQL, "INSERT INTO currency ( u_name, u_code, u_id ) VALUES ( $1, $2, $3 ) RETURNING * ;"),
+    ?assertEqual(SQL, "INSERT INTO db_currency ( u_name, u_code, u_id ) VALUES ( $1, $2, $3 ) RETURNING * ;"),
     {ok, 1, [], [{1,987,"NAN"}]}
   end,
 
   mock(gen_dbi),
   meck:expect(gen_dbi, execute, F),
 
-  Currency = currency:new(Proplist),
+  Currency = db_currency:new(Proplist),
   DBH = #gen_dbi_dbh{driver = pg, driver_config = [], handle = {}},
 
-  ?assertEqual( insert(currency, Currency, DBH), {ok, Currency}).
+  ?assertEqual( insert(db_currency, Currency, DBH), {ok, Currency}).
 
 %%--------------------------------------------------------------------------------------------------
 
@@ -213,7 +213,7 @@ when
   end,
   [ AssertPKVal(PKV) || PKV <- PKValues],
 
-  SQLTable = atom_to_list(Module),
+  SQLTable = get_table_name(Module),
   SQLSet = format_placeholders_where(Fields),
   SQLWhere = format_placeholders_where(length(Fields)+1, PKFields),
 
@@ -232,18 +232,18 @@ update_test() ->
   Proplist = [{u_id,1}, {u_code, 987}, {u_name,"NAN"}],
 
   F = fun(_DBH, SQL, _Values) ->
-    ?assertEqual(SQL, "UPDATE currency SET u_code = $1 WHERE u_id = $2 RETURNING *;"),
+    ?assertEqual(SQL, "UPDATE db_currency SET u_code = $1 WHERE u_id = $2 RETURNING *;"),
     {ok, 1, [], [{1,987,"NAN"}]}
   end,
 
   mock(gen_dbi),
   meck:expect(gen_dbi, execute, F),
 
-  Currency = currency:new(Proplist),
+  Currency = db_currency:new(Proplist),
   Currency2 = Currency:fset(u_code, <<"999">>),
   DBH = #gen_dbi_dbh{driver = pg, driver_config = [], handle = {}},
 
-  ?assertEqual( update(currency, Currency2, DBH, [u_code]), {ok, Currency}).
+  ?assertEqual( update(db_currency, Currency2, DBH, [u_code]), {ok, Currency}).
 
 %%--------------------------------------------------------------------------------------------------
 
@@ -260,7 +260,7 @@ when
   Fields = ?PROPLIST_KEYS(Proplist),
   Values = ?PROPLIST_VALUES(Proplist),
   SQLWhere = format_placeholders_where(Fields),
-  SQLTable = atom_to_list(Module),
+  SQLTable = get_table_name(Module),
 
   SQL = lists:flatten(
     io_lib:format("DELETE FROM ~s WHERE ~s RETURNING * ;",
@@ -278,7 +278,7 @@ delete_test() ->
   Proplist = [{u_id,1}, {u_code, 987}, {u_name,"NAN"}],
 
   F1 = fun(_DBH, SQL, _Values) ->
-    ?assertEqual(SQL, "DELETE FROM currency WHERE u_id = $1 RETURNING * ;"),
+    ?assertEqual(SQL, "DELETE FROM db_currency WHERE u_id = $1 RETURNING * ;"),
     ok
   end,
 
@@ -290,13 +290,21 @@ delete_test() ->
   meck:expect(gen_dbi, execute, F1),
   meck:expect(gen_dbi, result_to_structs, F2),
 
-  Currency = currency:new(Proplist),
+  Currency = db_currency:new(Proplist),
   DBH = #gen_dbi_dbh{driver = pg, driver_config = [], handle = {}},
 
-  ?assertEqual( delete(currency, Currency, DBH), {ok, ok}).
+  ?assertEqual( delete(db_currency, Currency, DBH), {ok, ok}).
 
 %%--------------------------------------------------------------------------------------------------
 %% Internal
+%%--------------------------------------------------------------------------------------------------
+
+get_table_name(Module) ->
+  case application:get_env(gen_dbi, erl_table_prefix) of
+    undefined -> atom_to_list(Module);
+    {ok, Val} -> Val -- atom_to_list(Module)
+  end.
+
 %%--------------------------------------------------------------------------------------------------
 
 format_columns_list(Columns) ->
@@ -362,7 +370,7 @@ test1() ->
   F = fun(DBH) ->
 
     %% create struct
-    Currency = currency:new([{u_code, <<"216">>},
+    Currency = db_currency:new([{u_code, <<"216">>},
                              {u_name, <<"IPH">>}]),
 
     %% get field
@@ -388,14 +396,14 @@ test1() ->
     %% select all from table
     %% only on lookups we don't use Currency (note the upper C), but we use currency
     %% because we select new struct, we don't work on one
-    {ok, Currencies1} = currency:lookup(DBH),
+    {ok, Currencies1} = db_currency:lookup(DBH),
     io:format(" Currencies1: ~p\n\n", [Currencies1]),
    
     %% select pk from table
-    {ok, Currency2} = currency:lookup(DBH, {Currency1:fget(u_id)}),
+    {ok, Currency2} = db_currency:lookup(DBH, {Currency1:fget(u_id)}),
 
     %% select by where from table
-    {ok, Currencies2} = currency:lookup(DBH, [{u_code, "EUR"}]),
+    {ok, Currencies2} = db_currency:lookup(DBH, [{u_code, "EUR"}]),
     io:format(" Currencies2: ~p\n\n", [Currencies2]),
 
     %% delete currency
