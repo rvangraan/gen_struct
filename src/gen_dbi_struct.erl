@@ -35,7 +35,8 @@ when
   is_atom(Module), 
   is_record(DBH, gen_dbi_dbh) 
 ->
-  SQL = "SELECT * FROM "++ atom_to_list(Module) ++" ;",
+  SQLTable = get_table_name(Module),
+  SQL = "SELECT * FROM "++ SQLTable ++" ;",
   gen_dbi:fetch_structs(DBH, SQL, Module).
 
 %%--------------------------------------------------------------------------------------------------
@@ -302,7 +303,7 @@ delete_test() ->
 get_table_name(Module) ->
   case application:get_env(gen_dbi, erl_table_prefix) of
     undefined -> atom_to_list(Module);
-    {ok, Val} -> Val -- atom_to_list(Module)
+    {ok, Val} -> atom_to_list(Module) -- Val
   end.
 
 %%--------------------------------------------------------------------------------------------------
