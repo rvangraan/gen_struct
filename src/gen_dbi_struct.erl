@@ -78,6 +78,8 @@ when
 
   case gen_dbi:fetch_structs(DBH, SQL, Values, Module) of
     Err when element(1,Err) =:= error -> Err;
+    {ok, []} ->
+      {error, does_not_exist};    
     {ok, Res} -> 
       {ok, hd(Res)}
   end;
@@ -105,7 +107,9 @@ when
 
   case gen_dbi:fetch_structs(DBH, SQL, Values, Module) of
     Err when element(1,Err) =:= error -> Err;
-    {ok, Res} -> 
+    {ok, []} ->
+      {error, does_not_exist};
+    {ok, Res} ->
       {ok, hd(Res)}
   end.
 
