@@ -70,7 +70,7 @@ when
   Values = tuple_to_list(PrimaryKey),
 
   SQLTable = get_table_name(Module),
-  SQLWhere = format_placeholders_where(Keys),
+  SQLWhere = format_placeholders_for_where(Keys),
 
   SQL = lists:flatten(
     io_lib:format("SELECT * FROM ~s WHERE ~s ;", 
@@ -99,7 +99,7 @@ when
   Values = ?PROPLIST_VALUES(Proplist),
 
   SQLTable = get_table_name(Module),
-  SQLWhere = format_placeholders_where(Keys),
+  SQLWhere = format_placeholders_for_where(Keys),
 
   SQL = lists:flatten(
     io_lib:format("SELECT * FROM ~s WHERE ~s ;", 
@@ -221,8 +221,8 @@ when
   [ AssertPKVal(PKV) || PKV <- PKValues],
 
   SQLTable = get_table_name(Module),
-  SQLSet = format_placeholders_where(Fields),
-  SQLWhere = format_placeholders_where(length(Fields)+1, PKFields),
+  SQLSet = format_placeholders_for_update(Fields),
+  SQLWhere = format_placeholders_for_where(length(Fields)+1, PKFields),
 
   SQL = lists:flatten(
     io_lib:format("UPDATE ~s SET ~s WHERE ~s RETURNING *;",
@@ -266,7 +266,7 @@ when
 
   Fields = ?PROPLIST_KEYS(Proplist),
   Values = ?PROPLIST_VALUES(Proplist),
-  SQLWhere = format_placeholders_where(Fields),
+  SQLWhere = format_placeholders_for_where(Fields),
   SQLTable = get_table_name(Module),
 
   SQL = lists:flatten(
@@ -333,16 +333,30 @@ format_placeholders_list(FromNum, NumOfFileds) ->
 
 %%--------------------------------------------------------------------------------------------------
 
-format_placeholders_where(Columns) ->
-  format_placeholders_where(1, Columns).
+format_placeholders_for_where(Columns) ->
+  format_placeholders_for_where(1, Columns).
 
-format_placeholders_where(FromNum, Columns) ->
+format_placeholders_for_where(FromNum, Columns) ->
   ColumnsNum = length(Columns),
   Placeholders  = lists:seq(FromNum, FromNum+ColumnsNum-1),
   Set = lists:zipwith(fun(A,B) -> {A,B} end, Columns, Placeholders ),
 
-  Where = [ " AND" ++ atom_to_list(K) ++" = $" ++ integer_to_list(N) || {K, N} <- Set],
+  Where = [ " AND " ++ atom_to_list(K) ++" = $" ++ integer_to_list(N) || {K, N} <- Set],
   Where1 = lists:flatten(Where) -- " AND",
+  Where1.
+
+%%--------------------------------------------------------------------------------------------------
+
+format_placeholders_for_update(Columns) ->
+  format_placeholders_for_update(1, Columns).
+
+format_placeholders_for_update(FromNum, Columns) ->
+  ColumnsNum = length(Columns),
+  Placeholders  = lists:seq(FromNum, FromNum+ColumnsNum-1),
+  Set = lists:zipwith(fun(A,B) -> {A,B} end, Columns, Placeholders ),
+
+  Where = [ " , " ++ atom_to_list(K) ++" = $" ++ integer_to_list(N) || {K, N} <- Set],
+  Where1 = lists:flatten(Where) -- " ,",
   Where1.
 
 %%--------------------------------------------------------------------------------------------------
