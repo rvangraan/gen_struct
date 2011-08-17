@@ -127,7 +127,7 @@ lookup_on_proplist_test_() ->
 
   [ 
     ?_assertException(throw, proplist_is_empty, lookup(db_currency, DBH, []) ),
-    ?_assertEqual( lookup(db_currency, DBH, [{u_code, 987}]), {ok, "SELECT * FROM db_currency WHERE u_code = $1 ;"})
+    ?_assertEqual( lookup(db_currency, DBH, [{u_code, 987}]), {ok, "SELECT * FROM db_currency WHERE  u_code = $1 ;"})
   ].
 
 %%--------------------------------------------------------------------------------------------------
@@ -144,7 +144,7 @@ lookup_on_pk_test_() ->
 
   [ 
     ?_assertException(throw, tuple_is_empty, lookup(db_currency, DBH, {}) ),
-    ?_assertEqual( lookup(db_currency, DBH, {1}), {ok, "SELECT * FROM db_currency WHERE u_id = $1 ;"})
+    ?_assertEqual( lookup(db_currency, DBH, {1}), {ok, "SELECT * FROM db_currency WHERE  u_id = $1 ;"})
   ].
 
 %%--------------------------------------------------------------------------------------------------
@@ -239,7 +239,7 @@ update_test() ->
   Proplist = [{u_id,1}, {u_code, 987}, {u_name,"NAN"}],
 
   F = fun(_DBH, SQL, _Values) ->
-    ?assertEqual(SQL, "UPDATE db_currency SET u_code = $1 WHERE u_id = $2 RETURNING *;"),
+    ?assertEqual(SQL, "UPDATE db_currency SET  u_code = $1 WHERE  u_id = $2 RETURNING *;"),
     {ok, 1, [], [{1,987,"NAN"}]}
   end,
 
@@ -285,7 +285,7 @@ delete_test() ->
   Proplist = [{u_id,1}, {u_code, 987}, {u_name,"NAN"}],
 
   F1 = fun(_DBH, SQL, _Values) ->
-    ?assertEqual(SQL, "DELETE FROM db_currency WHERE u_id = $1 RETURNING * ;"),
+    ?assertEqual(SQL, "DELETE FROM db_currency WHERE  u_id = $1 RETURNING * ;"),
     ok
   end,
 
