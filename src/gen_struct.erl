@@ -14,8 +14,7 @@
     to_list/2,
     to_tuple/2,
     to_proplist/2,
-    to_proplist/3,
-    to_json/2
+    to_proplist/3
   ]).
 %%--------------------------------------------------------------------------------------------------
 -define(FIELD(M, K),    M:'=field'(K) ).
@@ -121,13 +120,6 @@ to_proplist(Module, Struct, filter_undefined) ->
     end
   end,
   lists:foldl(F, [], to_proplist(Module, Struct) ).
-
-%%--------------------------------------------------------------------------------------------------
-
-to_json(Module, Struct) ->
-  Fields = ?FIELDS(Module),
-  Data = [{Field, fget(Module, Struct, Field)} || Field <- Fields],
-  {Data}.  
 
 %%--------------------------------------------------------------------------------------------------
 

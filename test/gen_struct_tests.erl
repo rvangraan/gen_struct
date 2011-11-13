@@ -248,22 +248,6 @@ to_proplist_test_() ->
 
 %%--------------------------------------------------------------------------------------------------  
 
-to_json_test() ->
-  M1 = test_struct1,
-  S1 = M1:new(),
-  Proplist = {[{field1,1},
-    {field2,undefined},
-    {field3,11.11},
-    {field4,<<"12345">>},
-    {field5,{1,2,3,4,5}},
-    {field6,[1,2,3,4,5]},
-    {field7,"12345"},
-    {field8,{test_record,1,2,3,4,5}}]},
-
-  ?assertMatch(Proplist, S1:to_json()).
-
-%%--------------------------------------------------------------------------------------------------  
-
 start_stop_test() ->
   ok = application:start(gen_struct),
   ok = application:stop(gen_struct),
