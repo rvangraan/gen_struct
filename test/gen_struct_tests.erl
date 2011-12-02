@@ -2,6 +2,7 @@
 -module(gen_struct_tests).
 %%--------------------------------------------------------------------------------------------------
 -include_lib("eunit/include/eunit.hrl").
+-include("test_struct1.hrl").
 %%--------------------------------------------------------------------------------------------------
 -define(ATOM, undefined).
 -define(INT, 1).
@@ -265,9 +266,19 @@ to_json_test() ->
 %%--------------------------------------------------------------------------------------------------  
 
 start_stop_test() ->
+  application:stop(gen_struct),
   ok = application:start(gen_struct),
   ok = application:stop(gen_struct),
   ok = application:start(gen_struct),
   ok.
 
 %%--------------------------------------------------------------------------------------------------
+
+blank_record_test_() ->
+  [?_assertMatch(#test_struct1{field1=undefined},gen_struct:blank_record(test_struct1))].
+%%--------------------------------------------------------------------------------------------------
+new_from_dict_test_() ->
+  [?_assertMatch(#test_struct1{field1=undefined},gen_struct:new_from_dict(test_struct1,dict:new())),
+   ?_assertMatch(#test_struct1{field1=1,
+                              field2=2},gen_struct:new_from_dict(test_struct1,dict:from_list([{field1,1},{field2,2}])))
+  ].

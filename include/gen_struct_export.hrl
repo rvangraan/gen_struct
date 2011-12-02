@@ -18,6 +18,7 @@
   new_from_list/1,
   new_from_tuple/1,
   new_from_proplist/1,  
+  new_from_dict/1,
   fset/2,
   fset/3,
   fget/2,
