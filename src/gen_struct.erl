@@ -173,13 +173,6 @@ to_proplist(Module, Struct, filter_undefined) ->
 
 %%--------------------------------------------------------------------------------------------------
 
-to_json(Module, Struct) ->
-  Fields = ?FIELDS(Module),
-  Data = [{Field, fget(Module, Struct, Field)} || Field <- Fields],
-  {Data}.  
-
-%%--------------------------------------------------------------------------------------------------
-
 %% TODO: new from json
 %% TODO utils module: to_dict
 %% TODO dumper function
