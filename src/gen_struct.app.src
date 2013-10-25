@@ -1,0 +1,12 @@
+{application, gen_struct,
+ [
+  {description, "Generic erlang structure"},
+  {vsn, "1.0.0"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {mod, { gen_struct_app, []}},
+  {env, []}
+ ]}.
